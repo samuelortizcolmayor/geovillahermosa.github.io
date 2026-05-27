@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-VISOR VILLA HERMOSA</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css"/>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="topbar">
+    <div class="topbar-left">
+        <div class="logo-block">
+            <span class="logo-icon">◈</span>
+            <div>
+                <div class="logo-title">G-VISOR<span class="accent">·</span>VILLA HERMOSA</div>
+                <div class="logo-sub">SISTEMA DE VISUALIZACIÓN GEOGRÁFICA</div>
+            </div>
+        </div>
+    </div>
+    <div class="topbar-center">
+        <div class="stat-pill"><span class="stat-label">CAPAS</span><span class="stat-val" id="statCapas">0</span></div>
+        <div class="stat-pill"><span class="stat-label">FEATURES</span><span class="stat-val" id="statFeatures">—</span></div>
+        <div class="stat-pill"><span class="stat-label">ZOOM</span><span class="stat-val" id="statZoom">13</span></div>
+        <div class="stat-pill"><span class="stat-label">COORDS</span><span class="stat-val" id="statCoords">—</span></div>
+    </div>
+    <div class="topbar-right">
+        <div class="clock" id="clockDisplay">00:00:00</div>
+        <div class="status-dot active"></div>
+        <span class="status-txt">ONLINE</span>
+    </div>
+</header>
+
+<div id="appBody">
+
+    <!-- SIDEBAR IZQUIERDO -->
+    <aside id="sidebar">
+        <button id="btnToggleSidebar" class="sidebar-toggle" type="button" title="Ocultar o mostrar panel">PANEL</button>
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-panel="panelCapas" title="Capas">
+                <span class="nav-icon">⊞</span>
+                <span class="nav-label">CAPAS</span>
+            </button>
+            <button class="nav-btn" data-panel="panelBasemaps" title="Mapas Base">
+                <span class="nav-icon">◎</span>
+                <span class="nav-label">BASE</span>
+            </button>
+            <button class="nav-btn" data-panel="panelEstilos" title="Estilos">
+                <span class="nav-icon">◈</span>
+                <span class="nav-label">ESTILOS</span>
+            </button>
+            <button class="nav-btn" data-panel="panelPopup" title="Popup">
+                <span class="nav-icon">⊡</span>
+                <span class="nav-label">POPUP</span>
+            </button>
+            <button class="nav-btn" data-panel="panelDatos" title="Datos">
+                <span class="nav-icon">≡</span>
+                <span class="nav-label">DATOS</span>
+            </button>
+            <button class="nav-btn" data-panel="panelCreadas" title="Capas creadas">
+                <span class="nav-icon">+</span>
+                <span class="nav-label">CREADAS</span>
+            </button>
+            <button class="nav-btn" data-panel="panelEtiquetas" title="Etiquetas">
+                <span class="nav-icon">Aa</span>
+                <span class="nav-label">ETIQ</span>
+            </button>
+            <button class="nav-btn" data-panel="panelSeleccion" title="Elemento seleccionado">
+                <span class="nav-icon">*</span>
+                <span class="nav-label">SEL</span>
+            </button>
+            <button class="nav-btn" data-panel="panelCategorias" title="Categorización">
+                <span class="nav-icon">▦</span>
+                <span class="nav-label">CAT</span>
+            </button>
+            <button class="nav-btn" data-panel="panelFiltros" title="Filtros avanzados">
+                <span class="nav-icon">?</span>
+                <span class="nav-label">FILT</span>
+            </button>
+            <button class="nav-btn" data-panel="panelAlertas" title="Alertas y casos">
+                <span class="nav-icon">!</span>
+                <span class="nav-label">ALERT</span>
+            </button>
+        </nav>
+
+        <!-- PANEL: CAPAS GEOGRÁFICAS -->
+        <div class="side-panel active" id="panelCapas">
+            <div class="panel-title">CAPAS GEOGRÁFICAS</div>
+            <div class="tab-row">
+                <button class="tab-btn" data-tab-target="capasGeograficasTab" data-collapsible-tab="true">GEOGRAFICAS</button>
+                <button class="tab-btn" data-tab-target="capasBibliotecaTab">BIBLIOTECA</button>
+            </div>
+            <div class="tab-content" id="capasGeograficasTab">
+                <div id="listaCapas"></div>
+            </div>
+            <div class="tab-content" id="capasBibliotecaTab">
+                <div class="panel-title mini">CAPAS GUARDADAS</div>
+                <div id="bibliotecaCapas" class="created-layer-list">
+                    <p class="hint-text">Las categorizaciones guardadas, alertas y casos apareceran aqui.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL: MAPAS BASE -->
+        <div class="side-panel" id="panelBasemaps">
+            <div class="panel-title">MAPA BASE</div>
+            <div class="basemap-grid" id="basemapGrid">
+                <div class="basemap-card active" data-bm="imagery">
+                    <div class="bm-preview bm-imagery"></div>
+                    <span>Imagery</span>
+                </div>
+                <div class="basemap-card" data-bm="dark">
+                    <div class="bm-preview bm-dark"></div>
+                    <span>Dark</span>
+                </div>
+                <div class="basemap-card" data-bm="streets">
+                    <div class="bm-preview bm-streets"></div>
+                    <span>Streets</span>
+                </div>
+                <div class="basemap-card" data-bm="topo">
+                    <div class="bm-preview bm-topo"></div>
+                    <span>Topo</span>
+                </div>
+                <div class="basemap-card" data-bm="light">
+                    <div class="bm-preview bm-light"></div>
+                    <span>Light</span>
+                </div>
+                <div class="basemap-card" data-bm="voyager">
+                    <div class="bm-preview bm-voyager"></div>
+                    <span>Voyager</span>
+                </div>
+                <div class="basemap-card" data-bm="esriTopo">
+                    <div class="bm-preview bm-esritopo"></div>
+                    <span>Esri Topo</span>
+                </div>
+                <div class="basemap-card" data-bm="esriGray">
+                    <div class="bm-preview bm-gray"></div>
+                    <span>Gray</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL: ESTILOS -->
+        <div class="side-panel" id="panelEstilos">
+            <div class="panel-title">ESTILOS DE CAPA</div>
+            <div class="select-row">
+                <label>Capa activa</label>
+                <select id="estiloSelectorCapa" class="sci-select"></select>
+            </div>
+            <div class="style-section">
+                <div class="style-row">
+                    <label>Color borde</label>
+                    <div class="color-row">
+                        <input type="color" id="estiloColor" value="#FF0000" class="color-input">
+                        <span id="estiloColorHex" class="hex-label">#FF0000</span>
+                    </div>
+                </div>
+                <div class="style-row">
+                    <label>Color relleno</label>
+                    <div class="color-row">
+                        <input type="color" id="estiloFillColor" value="#FF0000" class="color-input">
+                        <span id="estiloFillHex" class="hex-label">#FF0000</span>
+                    </div>
+                </div>
+                <div class="style-row">
+                    <label>Grosor borde <span class="val-badge" id="weightVal">2</span></label>
+                    <input type="range" id="estiloWeight" min="0.5" max="8" step="0.5" value="2" class="sci-range">
+                </div>
+                <div class="style-row">
+                    <label>Opacidad relleno <span class="val-badge" id="fillOpVal">20%</span></label>
+                    <input type="range" id="estiloFillOpacity" min="0" max="100" step="5" value="20" class="sci-range">
+                </div>
+                <div class="style-row">
+                    <label>Opacidad borde <span class="val-badge" id="opacityVal">100%</span></label>
+                    <input type="range" id="estiloOpacity" min="0" max="100" step="5" value="100" class="sci-range">
+                </div>
+                <div class="style-row">
+                    <label>Estilo línea</label>
+                    <select id="estiloDash" class="sci-select">
+                        <option value="">Sólido</option>
+                        <option value="5,5">Punteado</option>
+                        <option value="10,5">Guiones</option>
+                        <option value="15,5,5,5">Guión-punto</option>
+                    </select>
+                </div>
+                <button class="sci-btn full" id="btnAplicarEstilo">⬡ APLICAR ESTILO</button>
+                <button class="sci-btn full secondary" id="btnResetEstilo">↺ RESTAURAR</button>
+            </div>
+        </div>
+
+        <!-- PANEL: POPUP CONFIG -->
+        <div class="side-panel" id="panelPopup">
+            <div class="panel-title">CONFIGURAR POPUP</div>
+            <div class="select-row">
+                <label>Capa activa</label>
+                <select id="popupSelectorCapa" class="sci-select"></select>
+            </div>
+            <div class="popup-fields" id="popupFields">
+                <p class="hint-text">Selecciona una capa para ver sus campos.</p>
+            </div>
+            <button class="sci-btn full" id="btnAplicarPopup">⬡ APLICAR POPUP</button>
+        </div>
+
+        <!-- PANEL: DATOS -->
+        <div class="side-panel" id="panelDatos">
+            <div class="panel-title">EXPLORAR DATOS</div>
+            <div class="tab-row">
+                <button class="tab-btn active" data-tab-target="datosExplorarTab">EXPLORAR DATOS</button>
+                <button class="tab-btn" data-tab-target="datosAnalisisTab">ANALISIS</button>
+            </div>
+            <div class="tab-content active" id="datosExplorarTab">
+            <div class="select-row">
+                <label>Capa</label>
+                <select id="datosSelectorCapa" class="sci-select"></select>
+            </div>
+            <div class="datos-btns">
+                <button class="sci-btn full" onclick="abrirDashboard()">⬡ VER DASHBOARD</button>
+                <button class="sci-btn full" onclick="abrirTabla()">≡ VER TABLA</button>
+            </div>
+            <div id="datosResumen" class="datos-resumen"></div>
+            </div>
+            <div class="tab-content" id="datosAnalisisTab">
+            <div class="analysis-box">
+                <div class="panel-title mini">ANÁLISIS ESTADÍSTICO</div>
+                <div class="select-row">
+                    <label>Campo para graficar</label>
+                    <select id="graficaCampoSelector" class="sci-select"></select>
+                </div>
+                <div class="select-row">
+                    <label>Tipo de análisis</label>
+                    <select id="graficaTipoAnalisis" class="sci-select">
+                        <option value="conteo">Conteo por categoría</option>
+                        <option value="porcentaje">Porcentaje por categoría</option>
+                        <option value="numerico">Promedio, mínimo, máximo y atípicos</option>
+                    </select>
+                </div>
+                <button class="sci-btn full" id="btnGenerarGrafica">GENERAR GRÁFICA</button>
+                <button class="sci-btn full secondary" id="btnGenerarConclusion">GENERAR CONCLUSIÓN</button>
+                <div class="chart-panel">
+                    <canvas id="graficaAtributos"></canvas>
+                </div>
+                <div id="resumenEstadistico" class="datos-resumen"></div>
+                <div id="conclusionEstadistica" class="ai-conclusion">Genera una gráfica para crear una conclusión automática.</div>
+            </div>
+        </div>
+
+        <!-- PANEL: CATEGORIZACIÓN -->
+            </div>
+        <div class="side-panel" id="panelCategorias">
+            <div class="panel-title">CATEGORIZACIÓN</div>
+            <div class="select-row">
+                <label>Capa</label>
+                <select id="categoriaSelectorCapa" class="sci-select"></select>
+            </div>
+            <div class="select-row">
+                <label>Campo de clasificación</label>
+                <select id="categoriaCampo" class="sci-select"></select>
+            </div>
+            <div class="select-row">
+                <label>Nombre para guardar</label>
+                <input type="text" id="categoriaNombre" class="sci-input" placeholder="Ej: Lotes por tipo">
+            </div>
+            <button class="sci-btn full" id="btnGenerarCategorias">CLASIFICAR VALORES</button>
+            <div id="categoriaLista" class="category-list">
+                <p class="hint-text">Selecciona una capa y campo para generar categorías.</p>
+            </div>
+            <button class="sci-btn full" id="btnAplicarCategorias">APLICAR CATEGORÍAS</button>
+            <button class="sci-btn full" id="btnGuardarCategorias">GUARDAR EN BIBLIOTECA</button>
+            <button class="sci-btn full secondary" id="btnDesclasificarCategorias">DESCLASIFICAR VALORES</button>
+        </div>
+
+        <!-- PANEL: CAPAS CREADAS -->
+        <div class="side-panel" id="panelCreadas">
+            <div class="panel-title">CAPAS CREADAS</div>
+            <div class="select-row">
+                <label>Icono para nuevos markers</label>
+                <div id="iconLibrary" class="icon-library"></div>
+            </div>
+            <div id="listaCapasCreadas" class="created-layer-list">
+                <p class="hint-text">Dibuja puntos, lineas o poligonos para agregarlos aqui.</p>
+            </div>
+            <div class="panel-title mini">CATEGORIZACIONES GUARDADAS</div>
+            <div id="listaCategorizacionesGuardadas" class="created-layer-list">
+                <p class="hint-text">Guarda una categorizacion para verla aqui.</p>
+            </div>
+            <div class="panel-title mini">CASOS / OBSERVACIONES</div>
+            <div id="listaCasos" class="created-layer-list">
+                <p class="hint-text">Los predios marcados para verificacion apareceran aqui.</p>
+            </div>
+        </div>
+
+        <!-- PANEL: FILTROS AVANZADOS -->
+        <div class="side-panel" id="panelFiltros">
+            <div class="panel-title">FILTROS AVANZADOS</div>
+            <div class="select-row">
+                <label>Capa principal</label>
+                <select id="filtroSelectorCapa" class="sci-select"></select>
+            </div>
+            <div id="filtroCondiciones" class="filter-list"></div>
+            <button class="sci-btn full" id="btnAgregarFiltro">AGREGAR CONDICION</button>
+            <button class="sci-btn full" id="btnAplicarFiltros">APLICAR FILTROS</button>
+            <button class="sci-btn full secondary" id="btnLimpiarFiltros">LIMPIAR FILTROS</button>
+            <div class="select-row">
+                <label>Buscar por CBML / COBAMA</label>
+                <input type="text" id="busquedaPredio" class="sci-input" placeholder="CBML o COBAMA">
+            </div>
+            <button class="sci-btn full" id="btnBuscarPredio">BUSCAR PREDIO</button>
+            <button class="sci-btn full secondary" id="btnFiltroSeleccion">ANALIZAR SELECCION</button>
+            <div id="filtroResumen" class="datos-resumen">
+                <p class="hint-text">Crea combinaciones de filtros para detectar predios sospechosos.</p>
+            </div>
+        </div>
+
+        <!-- PANEL: ALERTAS Y CASOS -->
+        <div class="side-panel" id="panelAlertas">
+            <div class="panel-title">AUDITORIA CATASTRAL</div>
+            <div class="select-row">
+                <label>Modelo de deteccion</label>
+                <select id="alertaModelo" class="sci-select">
+                    <option value="pisos">Crecimiento vertical / pisos sospechosos</option>
+                    <option value="lotes_sin_construccion">Lotes sin construccion asociada</option>
+                    <option value="construcciones_sin_lote">Construcciones sin lote correspondiente</option>
+                    <option value="uso_vs_pot">Auditoria de uso predial</option>
+                    <option value="comercio_residencial">Comercio en predios residenciales</option>
+                    <option value="actividad_concentrada">Actividad economica concentrada</option>
+                    <option value="retiro_hidrico">Predios en retiro hidrico</option>
+                    <option value="valor_intensidad">Valor del suelo vs intensidad constructiva</option>
+                    <option value="estrato_actividad">Estrato vs uso / actividad</option>
+                </select>
+            </div>
+            <div class="select-row">
+                <label>Capa base</label>
+                <select id="alertaSelectorCapa" class="sci-select">
+                    <option value="construcciones_bvh">construcciones</option>
+                </select>
+            </div>
+            <div id="alertaParametros" class="audit-param-panel">
+                <div class="panel-title mini">PARAMETROS DEL MODELO</div>
+                <div class="filter-grid">
+                    <div class="select-row audit-param-field" id="paramPisosAltos">
+                        <label id="labelAlertaPisosAltos">Pisos altos desde</label>
+                        <input type="number" id="alertaPisosAltos" class="sci-input" placeholder="4" value="4">
+                    </div>
+                    <div class="select-row audit-param-field" id="paramEstratoBajo">
+                        <label id="labelAlertaEstratoBajo">Estrato bajo hasta</label>
+                        <input type="number" id="alertaEstratoBajo" class="sci-input" placeholder="2" value="2">
+                    </div>
+                </div>
+                <div class="filter-grid">
+                    <div class="select-row audit-param-field" id="paramValorM2Bajo">
+                        <label id="labelAlertaValorM2Bajo">Valor m2 bajo hasta</label>
+                        <input type="number" id="alertaValorM2Bajo" class="sci-input" placeholder="1000000" value="1000000">
+                    </div>
+                    <div class="select-row audit-param-field" id="paramAreaTolerancia">
+                        <label id="labelAlertaAreaTolerancia">Tolerancia area %</label>
+                        <input type="number" id="alertaAreaTolerancia" class="sci-input" placeholder="75" value="75">
+                    </div>
+                </div>
+            </div>
+            <div id="alertaModeloInfo" class="ai-conclusion">
+                Cruza construcciones con lotes, estrato, valor m2 y usos del predio.
+            </div>
+            <button class="sci-btn full" id="btnEjecutarAlertas">DETECTAR IRREGULARIDADES</button>
+            <button class="sci-btn full secondary" id="btnLimpiarAlertas">LIMPIAR AUDITORIA</button>
+            <button class="sci-btn full" id="btnGuardarCasoSeleccion">GUARDAR CASO SELECCIONADO</button>
+            <div id="alertaResumen" class="datos-resumen">
+                <p class="hint-text">Cruza construcciones con lotes, estrato, valor m2 y usos del predio.</p>
+            </div>
+            <div id="alertaResultados" class="created-layer-list"></div>
+        </div>
+
+        <!-- PANEL: ETIQUETAS -->
+        <div class="side-panel" id="panelEtiquetas">
+            <div class="panel-title">ETIQUETAS POR ATRIBUTO</div>
+            <div class="select-row">
+                <label>Capa</label>
+                <select id="etiquetaSelectorCapa" class="sci-select"></select>
+            </div>
+            <div class="style-row">
+                <label class="check-label">
+                    <input type="checkbox" id="etiquetaActiva">
+                    Mostrar etiquetas
+                </label>
+            </div>
+            <div class="select-row">
+                <label>Campo visible</label>
+                <select id="etiquetaCampo" class="sci-select"></select>
+            </div>
+            <button class="sci-btn full" id="btnAplicarEtiquetas">APLICAR ETIQUETAS</button>
+            <p class="hint-text">Base preparada para ampliar luego tamano, color y estilo.</p>
+        </div>
+
+        <!-- PANEL: ELEMENTO SELECCIONADO -->
+        <div class="side-panel" id="panelSeleccion">
+            <div class="panel-title">ELEMENTO SELECCIONADO</div>
+            <div id="selectedInfo" class="datos-resumen">
+                <p class="hint-text">Selecciona un elemento desde el mapa, una capa creada o la tabla.</p>
+            </div>
+            <div class="style-section">
+                <div class="style-row">
+                    <label>Color</label>
+                    <div class="color-row">
+                        <input type="color" id="selColor" value="#00d4ff" class="color-input">
+                        <span id="selColorHex" class="hex-label">#00d4ff</span>
+                    </div>
+                </div>
+                <div class="style-row">
+                    <label>Grosor <span class="val-badge" id="selWeightVal">3</span></label>
+                    <input type="range" id="selWeight" min="1" max="12" step="1" value="3" class="sci-range">
+                </div>
+                <div class="style-row">
+                    <label>Transparencia <span class="val-badge" id="selOpacityVal">100%</span></label>
+                    <input type="range" id="selOpacity" min="10" max="100" step="5" value="100" class="sci-range">
+                </div>
+                <div id="markerEditFields" class="marker-edit-fields">
+                    <div class="style-row">
+                        <label>Descripción / nombre</label>
+                        <textarea id="selMarkerDescripcion" class="sci-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="select-row">
+                        <label>Icono marker</label>
+                        <select id="selMarkerIcono" class="sci-select"></select>
+                    </div>
+                </div>
+                <button class="sci-btn full" id="btnAplicarSeleccion">APLICAR AL ELEMENTO</button>
+                <button class="sci-btn full secondary" id="btnLimpiarSeleccion">LIMPIAR SELECCION</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAPA -->
+    <div id="mapContainer">
+        <div id="map"></div>
+
+        <!-- CORNER DECORATIONS -->
+        <div class="corner-tl"></div>
+        <div class="corner-tr"></div>
+        <div class="corner-bl"></div>
+        <div class="corner-br"></div>
+
+        <!-- SCAN LINE -->
+        <div class="scan-line"></div>
+
+        <!-- GOOGLE STREET VIEW -->
+        <div id="streetViewPanel" class="streetview-panel collapsed">
+            <div class="streetview-header">
+                <span>STREET VIEW</span>
+                <span id="streetViewToggleText" class="streetview-toggle-text">ABRIR</span>
+            </div>
+            <div id="streetViewEmpty" class="streetview-empty">
+                Configura GOOGLE_STREET_VIEW_API_KEY en scripts.js y haz clic en el mapa.
+            </div>
+            <iframe id="streetViewFrame" title="Google Street View" src="https://www.google.com/maps/embed?pb=!4v1778599051099!6m8!1m7!1s6BNlIQecijAAkynRWWDstA!2m2!1d6.258643409280314!2d-75.55148674173147!3f101.15370818429449!4f34.45051899092506!5f0.7820865974627469" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL DASHBOARD -->
+<div class="modal-overlay" id="modalDashboard">
+    <div class="modal-window" id="modalDashboardWin">
+        <div class="modal-header">
+            <span class="modal-icon">⬡</span>
+            <span class="modal-title" id="dashboardTitle">DASHBOARD</span>
+            <button class="modal-close" onclick="cerrarModal('modalDashboard')">✕</button>
+        </div>
+        <div class="modal-body" id="dashboardContenido"></div>
+    </div>
+</div>
+
+<!-- MODAL TABLA -->
+<div class="modal-overlay" id="modalTabla">
+    <div class="modal-window wide" id="modalTablaWin">
+        <div class="modal-header">
+            <span class="modal-icon">≡</span>
+            <span class="modal-title" id="tablaTitle">TABLA DE ATRIBUTOS</span>
+            <button class="modal-close" onclick="cerrarModal('modalTabla')">✕</button>
+        </div>
+        <div class="modal-body" id="tablaContenido"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="scripts.js"></script>
+
+</body>
+</html>
